@@ -339,6 +339,7 @@
     <div class="nav-group">
       <div class="nav-title">General</div>
       <a href="#introduction" class="nav-link active">Introduction</a>
+      <a href="#about-cse" class="nav-link">About CSE</a>
       <a href="#authentication" class="nav-link">Authentication</a>
     </div>
 
@@ -395,6 +396,52 @@
       <div class="url-bar">
         <span class="url-text">https://www.cse.lk/api/</span>
         <button class="btn-copy" onclick="copyToClipboard('https://www.cse.lk/api/')">Copy</button>
+      </div>
+    </section>
+
+    <section id="about-cse">
+      <h2>About CSE</h2>
+      <p>The <strong>Colombo Stock Exchange (CSE)</strong> is the main stock exchange in Sri Lanka, operating from the
+        World Trade Center in Colombo. It provides a transparent and regulated environment for trading equity and debt
+        securities.</p>
+
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 24px;">
+        <div class="endpoint-card" style="margin-bottom: 0;">
+          <h3><span style="border-bottom: 2px solid var(--accent-color); padding-bottom: 4px;">Market Hours</span></h3>
+          <ul style="list-style: none; margin-top: 16px; color: var(--text-secondary); font-size: 14px;">
+            <li style="margin-bottom: 8px; display: flex; justify-content: space-between;">
+              <span>Pre-open Session</span>
+              <span style="color: var(--text-primary); font-family: 'Fira Code', monospace;">09:00 - 09:30 AM</span>
+            </li>
+            <li style="margin-bottom: 8px; display: flex; justify-content: space-between;">
+              <span>Open Auction</span>
+              <span style="color: var(--text-primary); font-family: 'Fira Code', monospace;">09:30 AM</span>
+            </li>
+            <li style="margin-bottom: 8px; display: flex; justify-content: space-between;">
+              <span>Regular Trading</span>
+              <span style="color: var(--text-primary); font-family: 'Fira Code', monospace;">09:30 - 02:30 PM</span>
+            </li>
+            <li style="margin-top: 12px; font-size: 12px; font-style: italic;">* Time Zone: Sri Lanka Time (GMT+5:30)
+            </li>
+          </ul>
+        </div>
+
+        <div class="endpoint-card" style="margin-bottom: 0;">
+          <h3><span style="border-bottom: 2px solid var(--method-get); padding-bottom: 4px;">Key Indices</span></h3>
+          <div style="margin-top: 16px;">
+            <div style="margin-bottom: 16px;">
+              <strong style="color: var(--text-primary);">ASPI (All Share Price Index)</strong>
+              <p style="font-size: 13px; margin-top: 4px;">Measures the movement of share prices of all listed companies
+                on the CSE.</p>
+            </div>
+            <div>
+              <strong style="color: var(--text-primary);">S&P SL20</strong>
+              <p style="font-size: 13px; margin-top: 4px;">Designed to measure the performance of the 20 largest and
+                most liquid companies.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
