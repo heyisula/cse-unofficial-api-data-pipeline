@@ -1,144 +1,694 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>CSE API Documentation</title>
-<style>
-  :root{
-    --bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#06b6d4;--glass:rgba(255,255,255,0.03);
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,#071028,#071429);color:#e6eef6;padding:20px}
-  header{text-align:center;margin-bottom:30px}
-  header h1{font-size:28px;margin-bottom:10px;color:#fff}
-  header p{color:var(--muted)}
-  .endpoint{background:var(--card);margin-bottom:16px;border-radius:12px;overflow:hidden;box-shadow:0 6px 20px rgba(2,6,23,0.6)}
-  .endpoint summary{cursor:pointer;padding:14px;font-size:18px;font-weight:600;background:linear-gradient(90deg,var(--accent),#7c3aed);color:#021}
-  .endpoint summary:hover{filter:brightness(1.1)}
-  .endpoint-content{padding:16px;font-size:14px;line-height:1.5;background:var(--card)}
-  code,pre{background:var(--glass);padding:4px 6px;border-radius:6px;font-family:monospace}
-  pre{display:block;overflow-x:auto;margin-top:6px;padding:12px}
-  table{border-collapse:collapse;width:100%;margin-top:10px}
-  th,td{border:1px solid rgba(255,255,255,0.1);padding:8px;font-size:13px}
-  th{background:rgba(255,255,255,0.05)}
-  img.logo{max-height:60px;margin-top:8px;border-radius:6px;background:#fff;padding:2px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSE Unofficial API Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-body: #0f172a;
+      --bg-sidebar: #1e293b;
+      --bg-card: #1e293b;
+      --border-color: #334155;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --accent-color: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --method-get: #4ade80;
+      --method-post: #facc15;
+      --code-bg: #0b1120;
+      --glass: rgba(255, 255, 255, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-primary);
+      display: flex;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: 280px;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      height: 100vh;
+      position: fixed;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .sidebar-header {
+      margin-bottom: 32px;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      font-size: 10px;
+      background: #ef4444;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-group {
+      margin-bottom: 24px;
+    }
+
+    .nav-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-link {
+      display: block;
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: all 0.2s;
+      margin-bottom: 4px;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background-color: var(--glass);
+      color: var(--accent-color);
+    }
+
+    /* Main Content Styles */
+    .main-content {
+      flex: 1;
+      margin-left: 280px;
+      padding: 48px 64px;
+      max-width: 1200px;
+    }
+
+    section {
+      margin-bottom: 60px;
+      scroll-margin-top: 80px;
+    }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 16px;
+      background: linear-gradient(to right, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      margin-top: 40px;
+    }
+
+    h3 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    /* Endpoint Card */
+    .endpoint-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .method-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: #000;
+    }
+
+    .method-post {
+      background-color: var(--method-post);
+    }
+
+    .url-bar {
+      background-color: var(--code-bg);
+      padding: 12px;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--border-color);
+      margin-bottom: 16px;
+    }
+
+    .url-text {
+      color: var(--accent-color);
+      word-break: break-all;
+    }
+
+    .btn-copy {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.2s;
+    }
+
+    .btn-copy:hover {
+      color: var(--text-primary);
+      background-color: var(--glass);
+    }
+
+    /* Tables */
+    .params-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    .params-table th,
+    .params-table td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .params-table th {
+      color: var(--text-secondary);
+      font-weight: 500;
+      width: 30%;
+    }
+
+    .param-name {
+      font-family: 'Fira Code', monospace;
+      color: var(--accent-color);
+    }
+
+    .param-type {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    /* Code Blocks */
+    pre {
+      background-color: var(--code-bg);
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Fira Code', monospace;
+      border: 1px solid var(--border-color);
+      font-size: 13px;
+      color: #e2e8f0;
+    }
+
+    .json-key {
+      color: #f472b6;
+    }
+
+    .json-string {
+      color: #a5f3fc;
+    }
+
+    .json-number {
+      color: #fbbf24;
+    }
+
+    .json-boolean {
+      color: #818cf8;
+    }
+
+    .json-null {
+      color: #94a3b8;
+    }
+
+    .disclaimer-box {
+      background-color: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 32px;
+    }
+
+    .disclaimer-box p {
+      margin-bottom: 0;
+      color: #fca5a5;
+      font-size: 14px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 24px;
+      }
+
+      .toggle-menu {
+        display: block;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 8px;
+        border-radius: 4px;
+      }
+    }
+
+    .toggle-menu {
+      display: none;
+    }
+  </style>
 </head>
+
 <body>
-  <header>
-    <h1>Colombo Stock Exchange API — Documentation</h1>
-    <p>Base URL: <code>https://www.cse.lk/api/</code></p>
-    <p>All endpoints use <strong>POST</strong> requests with <code>application/x-www-form-urlencoded</code> data.</p>
-  </header>
 
-  <section>
-    <details class="endpoint"><summary>companyInfoSummery</summary><div class="endpoint-content"><p><strong>URL:</strong> <code>https://www.cse.lk/api/companyInfoSummery</code></p><p><strong>Parameters:</strong> <code>symbol</code> (string, required)</p><p><strong>Example Response:</strong></p><pre>{
-  "reqLogo": {"path": "upload_logo/378_1601611239.jpeg"},
-  "reqSymbolInfo": {"symbol": "LOLC.N0000", "name": "L O L C HOLDINGS PLC", ...}
-}</pre><p><strong>Logo:</strong></p><img class="logo" src="https://cdn.cse.lk/cmt/upload_logo/378_1601611239.jpeg" alt="Company Logo"></div></details>
+  <button class="toggle-menu" onclick="document.querySelector('.sidebar').classList.toggle('active')">
+    Menu
+  </button>
 
-    <details class="endpoint"><summary>tradeSummary</summary><div class="endpoint-content"><pre>{"reqTradeSummery": [{"symbol": "ABAN.N0000", "price": 579.75, ...}]</pre></div></details>
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">CSE API <span class="badge">Unofficial</span></div>
+      <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">v1.0.0</div>
+    </div>
 
-    <details class="endpoint"><summary>todaySharePrice</summary><div class="endpoint-content"><pre>[{"symbol": "ABAN.N0000", "lastTradedPrice": 579.75, ...}]</pre></div></details>
+    <div class="nav-group">
+      <div class="nav-title">General</div>
+      <a href="#introduction" class="nav-link active">Introduction</a>
+      <a href="#authentication" class="nav-link">Authentication</a>
+    </div>
 
-    <details class="endpoint"><summary>topGainers</summary><div class="endpoint-content"><pre>[{"symbol": "HEXP.N0000", "changePercentage": 15.86, ...}]</pre></div></details>
+    <div class="nav-group">
+      <div class="nav-title">Market Data</div>
+      <a href="#market-summary" class="nav-link">Market Summary</a>
+      <a href="#daily-summary" class="nav-link">Daily Market Summary</a>
+      <a href="#market-status" class="nav-link">Market Status</a>
+      <a href="#aspi-data" class="nav-link">ASPI Data</a>
+      <a href="#snp-data" class="nav-link">S&P SL20 Data</a>
+      <a href="#all-sectors" class="nav-link">Sector Indices</a>
+    </div>
 
-    <details class="endpoint"><summary>topLooses</summary><div class="endpoint-content"><pre>[{"symbol": "TESS.X0000", "changePercentage": -10.0, ...}]</pre></div></details>
+    <div class="nav-group">
+      <div class="nav-title">Company Data</div>
+      <a href="#company-info" class="nav-link">Company Info</a>
+      <a href="#trade-summary" class="nav-link">Trade Summary</a>
+      <a href="#detailed-trades" class="nav-link">Detailed Trades</a>
+      <a href="#chart-data" class="nav-link">Chart Data</a>
+      <a href="#today-price" class="nav-link">Today's Share Price</a>
+    </div>
 
-    <details class="endpoint"><summary>mostActiveTrades</summary><div class="endpoint-content"><pre>[{"symbol": "KZOO.N0000", "tradeVolume": 1102.0, ...}]</pre></div></details>
+    <div class="nav-group">
+      <div class="nav-title">Movers</div>
+      <a href="#top-gainers" class="nav-link">Top Gainers</a>
+      <a href="#top-losers" class="nav-link">Top Losers</a>
+      <a href="#most-active" class="nav-link">Most Active</a>
+    </div>
 
-    <details class="endpoint"><summary>getNewListingsRelatedNoticesAnnouncements</summary><div class="endpoint-content"><pre>{"newListingRelatedAnnouncements": [{"company": "COMMERCIAL BANK OF CEYLON PLC", ...}]</pre></div></details>
+    <div class="nav-group">
+      <div class="nav-title">Announcements</div>
+      <a href="#announcements" class="nav-link">All Announcements</a>
+    </div>
+  </nav>
 
-    <details class="endpoint"><summary>getBuyInBoardAnnouncements</summary><div class="endpoint-content"><pre>{"buyInBoardAnnouncements": [{"company": "TRADING AND MARKET SURVEILLANCE", ...}]</pre></div></details>
+  <main class="main-content">
+    <section id="introduction">
+      <h1>CSE Unofficial API</h1>
+      <p>Documentation for the unofficial Colombo Stock Exchange (CSE) API.</p>
 
-    <details class="endpoint"><summary>approvedAnnouncement</summary><div class="endpoint-content"><pre>{"approvedAnnouncements": [{"company": "LANKEM DEVELOPMENTS PLC", ...}]</pre></div></details>
+      <div class="disclaimer-box">
+        <p><strong>Disclaimer:</strong> This is a third-party documentation project and isn't affiliated with the
+          Colombo Stock Exchange. Use these endpoints responsibly and at your own risk. This documentation is based on
+          public analysis of network traffic.</p>
+      </div>
 
-    <details class="endpoint"><summary>getCOVIDAnnouncements</summary><div class="endpoint-content"><pre>{"covidAnnouncements": [{"company": "LANKA MILK FOODS (CWE) PLC", ...}]</pre></div></details>
+      <h2>Base URL</h2>
+      <div class="url-bar">
+        <span class="url-text">https://www.cse.lk/api/</span>
+        <button class="btn-copy" onclick="copyToClipboard('https://www.cse.lk/api/')">Copy</button>
+      </div>
+    </section>
 
-    <details class="endpoint"><summary>getFinancialAnnouncement</summary><div class="endpoint-content"><pre>{"reqFinancialAnnouncemnets": [{"symbol": "LDEV", "fileText": "Annual Report 2024/2025", ...}]</pre></div></details>
+    <section id="authentication">
+      <h2>Authentication & Headers</h2>
+      <p>Most endpoints are public but it is recommended to mimic browser headers.</p>
+      <pre>Content-Type: application/x-www-form-urlencoded
+Origin: https://www.cse.lk
+Referer: https://www.cse.lk/</pre>
+    </section>
 
-    <details class="endpoint"><summary>circularAnnouncement</summary><div class="endpoint-content"><pre>{"reqCircularAnnouncement": [{"fileText": "EMPLOYEE SHARE OPTION SCHEMES", ...}]</pre></div></details>
+    <!-- Market Summary -->
+    <section id="market-summary">
+      <h3>Market Summary</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/marketSummery</span>
+          <button class="btn-copy" onclick="copyToClipboard('/marketSummery')">Copy</button>
+        </div>
+        <p>Get high-level market statistics including turnover and volume.</p>
+        < пре>{
+          <span class="json-key">"tradeVolume"</span>: <span class="json-number">3263762020.0</span>,
+          <span class="json-key">"shareVolume"</span>: <span class="json-number">115084307</span>
+          }</pre>
+      </div>
+    </section>
 
-    <details class="endpoint"><summary>directiveAnnouncement</summary><div class="endpoint-content"><pre>{"reqDirectiveAnnouncement": [{"fileText": "DIRECTIVE ISSUED ...", ...}]</pre></div></details>
+    <!-- Daily Market Summary -->
+    <section id="daily-summary">
+      <h3>Daily Market Summary</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/dailyMarketSummery</span>
+          <button class="btn-copy" onclick="copyToClipboard('/dailyMarketSummery')">Copy</button>
+        </div>
+        <p>Detailed breakdown of daily market performance.</p>
+        <pre>[
+  {
+    <span class="json-key">"marketTurnover"</span>: <span class="json-number">3.26376192E9</span>,
+    <span class="json-key">"marketCap"</span>: <span class="json-number">6.940225783432E12</span>
+  }
+]</pre>
+      </div>
+    </section>
 
-    <details class="endpoint"><summary>getNonComplianceAnnouncements</summary><div class="endpoint-content"><pre>{"nonComplianceAnnouncements": [{"company": "BROWNS BEACH HOTELS PLC", ...}]</pre></div></details>
+    <!-- Market Status -->
+    <section id="market-status">
+      <h3>Market Status</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/marketStatus</span>
+          <button class="btn-copy" onclick="copyToClipboard('/marketStatus')">Copy</button>
+        </div>
+        <p>Check if the market is currently open or closed.</p>
+        <pre>{ <span class="json-key">"status"</span>: <span class="json-string">"Market Closed"</span> }</pre>
+      </div>
+    </section>
 
-    <details class="endpoint"><summary>marketStatus</summary><div class="endpoint-content"><pre>{"status": "Market Closed"}</pre></div></details>
+    <!-- ASPI Data -->
+    <section id="aspi-data">
+      <h3>ASPI Data</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/aspiData</span>
+          <button class="btn-copy" onclick="copyToClipboard('/aspiData')">Copy</button>
+        </div>
+        <pre>{ <span class="json-key">"value"</span>: <span class="json-number">19826.57</span>, <span class="json-key">"change"</span>: <span class="json-number">21.77</span> }</pre>
+      </div>
+    </section>
 
-    <details class="endpoint"><summary>marketSummery</summary><div class="endpoint-content"><pre>{"tradeVolume": 3263762020.0, "shareVolume": 115084307, ...}</pre></div></details>
+    <!-- S&P Data -->
+    <section id="snp-data">
+      <h3>S&P SL20 Data</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/snpData</span>
+          <button class="btn-copy" onclick="copyToClipboard('/snpData')">Copy</button>
+        </div>
+        <pre>{ <span class="json-key">"value"</span>: <span class="json-number">5825.39</span>, <span class="json-key">"change"</span>: <span class="json-number">-2.46</span> }</pre>
+      </div>
+    </section>
 
-    <details class="endpoint"><summary>aspiData</summary><div class="endpoint-content"><pre>{"value": 19826.57, "change": 21.77, ...}</pre></div></details>
+    <!-- Sector Indices -->
+    <section id="all-sectors">
+      <h3>Sector Indices</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/allSectors</span>
+          <button class="btn-copy" onclick="copyToClipboard('/allSectors')">Copy</button>
+        </div>
+        <pre>[{ <span class="json-key">"symbol"</span>: <span class="json-string">"EGY"</span>, <span class="json-key">"indexName"</span>: <span class="json-string">"S&P/CSE Energy"</span> }]</pre>
+      </div>
+    </section>
 
-    <details class="endpoint"><summary>snpData</summary><div class="endpoint-content"><pre>{"value": 5825.39, "change": -2.46, ...}</pre></div></details>
+    <!-- Company Info -->
+    <section id="company-info">
+      <h3>Company Info Summary</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/companyInfoSummery</span>
+          <button class="btn-copy" onclick="copyToClipboard('/companyInfoSummery')">Copy</button>
+        </div>
+        <table class="params-table">
+          <tr>
+            <th>Parameter</th>
+            <th>Description</th>
+          </tr>
+          <tr>
+            <td><span class="param-name">symbol</span> <br><span class="param-type">string</span></td>
+            <td>The stock symbol (e.g., <code>LOLC.N0000</code>).</td>
+          </tr>
+        </table>
+        <pre>{
+  <span class="json-key">"reqSymbolInfo"</span>: {
+    <span class="json-key">"symbol"</span>: <span class="json-string">"LOLC.N0000"</span>,
+    <span class="json-key">"name"</span>: <span class="json-string">"L O L C HOLDINGS PLC"</span>
+  }
+}</pre>
+      </div>
+    </section>
 
-    <details class="endpoint"><summary>chartData</summary><div class="endpoint-content"><p>Requires <code>symbol</code> but may return HTTP 400 for some values.</p></div></details>
+    <!-- Trade Summary -->
+    <section id="trade-summary">
+      <h3>Trade Summary</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/tradeSummary</span>
+          <button class="btn-copy" onclick="copyToClipboard('/tradeSummary')">Copy</button>
+        </div>
+        <pre>{"reqTradeSummery": [{"symbol": "ABAN.N0000", "price": 579.75}]</pre>
+      </div>
+    </section>
 
-    <details class="endpoint"><summary>allSectors</summary><div class="endpoint-content"><pre>[{"symbol": "EGY", "indexName": "S&P/CSE Energy Industry Group Index", ...}]</pre></div></details>
-
-    <details class="endpoint"><summary>Detailed Trades</summary><div class="endpoint-content"><p><strong>URL:</strong> <code>https://www.cse.lk/api/detailedTrades</code></p><p><strong>Parameters:</strong> <code>symbol</code> (string, not required)</p><p><strong>Example Response:</strong></p><pre>
+    <!-- Detailed Trades -->
+    <section id="detailed-trades">
+      <h3>Detailed Trades</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/detailedTrades</span>
+          <button class="btn-copy" onclick="copyToClipboard('/detailedTrades')">Copy</button>
+        </div>
+        <table class="params-table">
+          <tr>
+            <th>Parameter</th>
+            <th>Description</th>
+          </tr>
+          <tr>
+            <td><span class="param-name">symbol</span> <br><span class="param-type">string (optional)</span></td>
+            <td>Filter by stock symbol.</td>
+          </tr>
+        </table>
+        <pre>{
+  <span class="json-key">"reqDetailTrades"</span>: [
     {
-      "reqDetailTrades": [
-          {
-              "id": 204,
-              "securityId": null,
-              "name": "ABANS ELECTRICALS PLC",
-              "symbol": "ABAN.N0000",
-              "price": 585.0,
-              "qty": 562,
-              "trades": 7,
-              "change": 29.0,
-              "changePercentage": 5.215827338129497
-          },
-        ]
-      }</details>
+      <span class="json-key">"symbol"</span>: <span class="json-string">"ABAN.N0000"</span>,
+      <span class="json-key">"price"</span>: <span class="json-number">585.0</span>
+    }
+  ]
+}</pre>
+      </div>
+    </section>
 
-    <details class="endpoint"><summary>Daily Market Summary</summary><div class="endpoint-content"><p><strong>URL:</strong> <code>https://www.cse.lk/api/dailyMarketSummery</code></p><p><strong>Parameters:</strong> None</p><p><strong>Example Response:</strong></p><pre>
-    [
-      [
-        {
-            "id": 22240,
-            "tradeDate": 1754505000000,
-            "marketTurnover": 3.26376192E9,
-            "marketTrades": 30274.0,
-            "marketDomestic": 30003.0,
-            "marketForeign": 271.0,
-            "equityTurnover": 3.26376192E9,
-            "equityDomesticPurchase": 3.15549645E9,
-            "equityDomesticSales": 3.18251674E9,
-            "equityForeignPurchase": 1.08265512E8,
-            "equityForeignSales": 8.1245208E7,
-            "volumeOfTurnOverNumber": 1.15084304E8,
-            "volumeOfTurnoverDomestic": 1.13407144E8,
-            "volumeOfTurnoverForeign": 1677157,
-            "tradesNo": 30274,
-            "tradesNoDomestic": 30003,
-            "tradesNoForeign": 271,
-            "listedCompanyNumber": 286,
-            "tradeCompanyNumber": 264,
-            "marketCap": 6.940225783432E12,
-            "cdsHoldingsTotal": 1.76301605E11,
-            "cdsHoldingsDomestic": 1.45956422E11,
-            "cdsHoldingsForeign": 3.03451935E10,
-            "cdsMarketValueTotal": 5.5536905E12,
-            "cdsMarketValueDomestic": 4.5569682E12,
-            "cdsMarketValueForeign": 9.9672234E11,
-            "corporateDebtValue": 0.0,
-            "governmentDebtValue": 0.0,
-            "triasi": 29913.8,
-            "spt": 11861.33,
-            "asi": 19826.57,
-            "mpi": null,
-            "spp": 5825.39,
-            "trimpi": null,
-            "per": 9.2,
-            "pbv": 1.3,
-            "dy": 2.5
+    <!-- Chart Data -->
+    <section id="chart-data">
+      <h3>Chart Data</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/chartData</span>
+          <button class="btn-copy" onclick="copyToClipboard('/chartData')">Copy</button>
+        </div>
+        <table class="params-table">
+          <tr>
+            <th>Parameter</th>
+            <th>Description</th>
+          </tr>
+          <tr>
+            <td><span class="param-name">symbol</span> <br><span class="param-type">string</span></td>
+            <td>Stock symbol.</td>
+          </tr>
+        </table>
+        <pre>{"reqTradeSummery": {'chartData': [{'h': 562.0, ...}]}</pre>
+      </div>
+    </section>
+
+    <!-- Today's Share Price -->
+    <section id="today-price">
+      <h3>Today's Share Price</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/todaySharePrice</span>
+          <button class="btn-copy" onclick="copyToClipboard('/todaySharePrice')">Copy</button>
+        </div>
+        <pre>[{"symbol": "ABAN.N0000", "lastTradedPrice": 579.75}]</pre>
+      </div>
+    </section>
+
+    <!-- Movers -->
+    <section id="top-gainers">
+      <h3>Top Gainers</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/topGainers</span>
+          <button class="btn-copy" onclick="copyToClipboard('/topGainers')">Copy</button>
+        </div>
+        <pre>[{"symbol": "HEXP.N0000", "changePercentage": 15.86}]</pre>
+      </div>
+    </section>
+
+    <section id="top-losers">
+      <h3>Top Losers</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/topLooses</span>
+          <button class="btn-copy" onclick="copyToClipboard('/topLooses')">Copy</button>
+        </div>
+        <pre>[{"symbol": "TESS.X0000", "changePercentage": -10.0}]</pre>
+      </div>
+    </section>
+
+    <section id="most-active">
+      <h3>Most Active</h3>
+      <div class="endpoint-card">
+        <div class="url-bar">
+          <span class="method-badge method-post">POST</span>
+          <span class="url-text">/mostActiveTrades</span>
+          <button class="btn-copy" onclick="copyToClipboard('/mostActiveTrades')">Copy</button>
+        </div>
+        <pre>[{"symbol": "KZOO.N0000", "tradeVolume": 1102.0}]</pre>
+      </div>
+    </section>
+
+    <!-- Announcements -->
+    <section id="announcements">
+      <h3>Announcements</h3>
+      <p>Collection of endpoints related to company announcements.</p>
+
+      <div class="endpoint-card">
+        <h5>Endpoints</h5>
+        <ul style="list-style: none; margin-top: 10px; color: var(--text-secondary); line-height: 2;">
+          <li><code>/getNewListingsRelatedNoticesAnnouncements</code></li>
+          <li><code>/getBuyInBoardAnnouncements</code></li>
+          <li><code>/approvedAnnouncement</code></li>
+          <li><code>/getCOVIDAnnouncements</code></li>
+          <li><code>/getFinancialAnnouncement</code></li>
+          <li><code>/circularAnnouncement</code></li>
+          <li><code>/directiveAnnouncement</code></li>
+          <li><code>/getNonComplianceAnnouncements</code></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer
+      style="margin-top: 100px; padding-top: 20px; border-top: 1px solid var(--border-color); color: var(--text-secondary); font-size: 14px; text-align: center;">
+      <p>Built for developers exploring the CSE data.</p>
+    </footer>
+
+  </main>
+
+  <script>
+    // Smooth scrolling for sidebar links
+    document.querySelectorAll('.nav-link').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth'
+          });
+
+          // Update active state
+          document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+          this.classList.add('active');
         }
-      ],
-    ]
-    </details>
-    <details class="endpoint"><summary>companyChartDataByStock</summary><div class="endpoint-content"><pre>{"reqTradeSummery": {'chartData': [{'h': 562.0, 'l': 562.0, 'o': None, 's': 51866050, 'q': 32, 'p': 562.0, 'c': 1.75, 'pc': 0.31236055332440876, 't': 1762401600377, 'n': None, 'id': 51866050}, ...}]}</pre></div></details>
-  </section>
+      });
+    });
+
+    // Copy to clipboard function
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        // Simplified feedback
+        alert('Copied: ' + text);
+      });
+    }
+  </script>
 </body>
+
 </html>
