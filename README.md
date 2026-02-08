@@ -26,11 +26,19 @@ We have built a fully automated pipeline to build your own historical dataset.
     *   **CSV**: Appends to `data/cse_market_data.csv` for historical analysis.
     *   **JSON**: Updates `data/cse_market_snapshot.json` for real-time dashboards.
 
-### How to Run the Pipeline
+### 📁 Project Structure
+
+*   **`main.py`**: The entry point. Orchestrates the fetching and storage loop.
+*   **`fetcher.py`**: Logic for session management, API calls, and rate limiting.
+*   **`storage.py`**: Handles writing data to CSV (history) and JSON (snapshot).
+*   **`data/`**: Directory where your datasets are stored (ignored by Git).
+*   **`apiweb/`**: Assets for the documentation web view.
+
+### 🛠️ How to Run the Pipeline
 
 1.  **Install Dependencies**:
     ```bash
-    pip install requests
+    pip install -r requirements.txt
     ```
 
 2.  **Start the Collector**:
@@ -87,3 +95,9 @@ If you discover new endpoints or better ways to handle the data, please submit a
 
 Forked from [GH0STH4CKER/Colombo-Stock-Exchange-CSE-API-Documentation](https://github.com/GH0STH4CKER/Colombo-Stock-Exchange-CSE-API-Documentation).
 Special thanks to the original author for the initial reverse engineering work.
+
+---
+
+## License 📄
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
