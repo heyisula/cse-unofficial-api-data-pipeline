@@ -5,7 +5,7 @@
 
 ---
 
-<b>Visit <a href='https://heyisula.github.io/cse_unofficial_api/'>this link</a> to see web view<b>
+<b>Visit <a href='https://heyisula.github.io/cse_unofficial_api_data_pipeline/'>this link</a> to see web view<b>
 
 ## Overview 📋
 
@@ -64,7 +64,7 @@ Base URL: `https://www.cse.lk/api/`
 
 > **Note**: Most endpoints require a valid session cookie (JSESSIONID) or specific headers (`Origin`, `Referer`, `X-Requested-With`) to work. See `fetcher.py` for a working implementation.
 
-visit <a href='https://github.com/heyisula/cse_unofficial_api/blob/main/api_endpoint_urls.txt'>this link</a> to view all complete endpoint urls.
+visit <a href='https://github.com/heyisula/cse_unofficial_api_data_pipeline/blob/main/api_endpoint_urls.txt'>this link</a> to view all complete endpoint urls.
 
 ---
 
