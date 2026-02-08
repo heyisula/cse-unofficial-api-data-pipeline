@@ -66,27 +66,35 @@ class CSEFetcher:
 
     def get_active_symbols(self):
         """
-        Grab the list of all stocks that are currently trading.
+        Grab the list of all symbols that are or were recently active.
+        We've switched this to 'tradeSummary' because 'todaySharePrice' 
+        often limits results to just 10 items.
         """
-        data = self._post("todaySharePrice")
+        data = self._post("tradeSummary")
         
         symbols = []
-        # The API is a bit inconsistent, sometimes it's a list, sometimes a dict
-        if isinstance(data, list):
-             for item in data:
-                symbol = item.get('symbol')
-                if symbol:
-                    symbols.append(symbol)
-        elif isinstance(data, dict) and 'reqTodaySharePrice' in data:
-             for item in data['reqTodaySharePrice']:
-                symbol = item.get('symbol')
-                if symbol:
-                    symbols.append(symbol)
+        # Support both the expected 'reqTradeSummery' wrapper and direct list fallback
+        if isinstance(data, dict) and 'reqTradeSummery' in data:
+            items = data['reqTradeSummery']
+        elif isinstance(data, list):
+            items = data
         else:
-             logger.warning(f"Weird data format for todaySharePrice: {type(data)}")
-             return []
+            logger.warning(f"Unexpected data format for tradeSummary: {type(data)}")
+            # Try todaySharePrice as a last resort backup
+            logger.info("Trying todaySharePrice as backup...")
+            data = self._post("todaySharePrice")
+            items = data if isinstance(data, list) else data.get('reqTodaySharePrice', []) if isinstance(data, dict) else []
+
+        if not items:
+            logger.warning("No symbols found in tradeSummary or backup.")
+            return []
+
+        for item in items:
+            symbol = item.get('symbol')
+            if symbol:
+                symbols.append(symbol)
         
-        logger.info(f"Found {len(symbols)} active symbols.")
+        logger.info(f"Retrieved {len(symbols)} symbols from market.")
         return symbols
 
     def get_company_info(self, symbol):
