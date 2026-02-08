@@ -4,18 +4,18 @@ import os
 import logging
 from datetime import datetime
 
-# Configure logging
+# Logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class CSEStorage:
     """
-    Handles storage of CSE market data to CSV and JSON files.
+    Handles saving our hard-earned data to CSV and JSON files.
     """
     CSV_FILENAME = "cse_market_data.csv"
     JSON_FILENAME = "cse_market_snapshot.json"
     
-    # Define CSV columns based on requirements
+    # The columns we want in our CSV
     CSV_HEADERS = [
         "timestamp",
         "symbol",
@@ -32,6 +32,7 @@ class CSEStorage:
 
     def __init__(self, output_dir="data"):
         self.output_dir = output_dir
+        # Make sure the folder exists
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
         
@@ -41,39 +42,38 @@ class CSEStorage:
         self._initialize_csv()
 
     def _initialize_csv(self):
-        """Creates the CSV file with headers if it doesn't exist."""
+        """Creates the CSV file and writes the headers if it's not there yet."""
         if not os.path.exists(self.csv_path):
             try:
                 with open(self.csv_path, mode='w', newline='', encoding='utf-8') as f:
                     writer = csv.writer(f)
                     writer.writerow(self.CSV_HEADERS)
-                logger.info(f"Created new CSV file: {self.csv_path}")
+                logger.info(f"Started a new CSV file at: {self.csv_path}")
             except IOError as e:
-                logger.error(f"Error creating CSV file: {e}")
+                logger.error(f"Trouble creating CSV file: {e}")
 
     def save_snapshot(self, market_summary, company_data_list):
         """
-        Saves a market snapshot (list of company data) to CSV and JSON.
+        Saves the current batch of data.
+        1. Appends to the big CSV history.
+        2. Overwrites the JSON snapshot with the latest info.
         
         Args:
-            market_summary: Dict containing high-level market data (status, ASPI, etc)
-            company_data_list: List of dicts, where each dict is the raw response from companyInfoSummery
+            market_summary: The overall market stats (ASPI, etc).
+            company_data_list: The list of raw company data we fetched.
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # Extract market-level metrics
-        # Note: market_summary structure depends on the exact API response. 
-        # We try to extract what we can, but fallback to 0 or None.
+        # Try to pull out the market numbers. If they aren't there, we just use None.
         aspi_value = market_summary.get('reqMarketSummery', {}).get('aspi', {}).get('value') if market_summary else None
         snp_value = market_summary.get('reqMarketSummery', {}).get('snp', {}).get('value') if market_summary else None
         market_turnover = market_summary.get('reqMarketSummery', {}).get('turnover') if market_summary else None
         
-        # Prepare rows for CSV
         csv_rows = []
         clean_data_list = []
 
         for company in company_data_list:
-             # structure: {'reqSymbolInfo': {...}, ...}
+             # The data is usually nested in 'reqSymbolInfo'
              info = company.get('reqSymbolInfo', {})
              if not info:
                  continue
@@ -83,7 +83,7 @@ class CSEStorage:
              last_price = info.get('lastTradedPrice')
              change = info.get('change')
              change_percentage = info.get('changePercentage')
-             trade_volume = info.get('tdyTradeVolume') # or 'tdyShareVolume'? Requirements say 'trade_volume'
+             trade_volume = info.get('tdyTradeVolume') 
              market_cap_val = info.get('marketCap')
 
              row = [
@@ -101,7 +101,7 @@ class CSEStorage:
              ]
              csv_rows.append(row)
              
-             # Create a clean dict for JSON dump (optional, but good for snapshots)
+             # Keep a clean version for JSON
              clean_data = {
                  "timestamp": timestamp,
                  "symbol": symbol,
@@ -109,19 +109,19 @@ class CSEStorage:
              }
              clean_data_list.append(clean_data)
 
-        # Write to CSV
+        # Write the rows to CSV
         if csv_rows:
             try:
                 with open(self.csv_path, mode='a', newline='', encoding='utf-8') as f:
                     writer = csv.writer(f)
                     writer.writerows(csv_rows)
-                logger.info(f"Appended {len(csv_rows)} rows to {self.csv_path}")
+                logger.info(f"Added {len(csv_rows)} rows to {self.csv_path}")
             except IOError as e:
-                logger.error(f"Error appending to CSV: {e}")
+                logger.error(f"Failed to append to CSV: {e}")
         else:
-            logger.warning("No data to save to CSV.")
+            logger.warning("Didn't find any data to save to CSV.")
 
-        # Write latest snapshot to JSON (Overwrites previous file)
+        # Update the JSON snapshot
         try:
             snapshot = {
                 "timestamp": timestamp,
@@ -130,9 +130,9 @@ class CSEStorage:
             }
             with open(self.json_path, 'w', encoding='utf-8') as f:
                 json.dump(snapshot, f, indent=4)
-            logger.info(f"Saved snapshot to {self.json_path}")
+            logger.info(f"Updated snapshot at {self.json_path}")
         except IOError as e:
-            logger.error(f"Error saving JSON: {e}")
+            logger.error(f"Failed to save JSON: {e}")
 
 if __name__ == "__main__":
     # verification

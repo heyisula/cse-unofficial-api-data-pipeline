@@ -2,18 +2,19 @@ import requests
 import time
 import logging
 
-# Configure logging
+# Set up logging so we can see what's happening
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class CSEFetcher:
     """
-    Unofficial Client for the Colombo Stock Exchange (CSE) API.
-    Handles session management, rate limiting, and data retrieval.
+    Client for collecting data from the Colombo Stock Exchange (CSE).
+    It manages the connection, cookies, and makes sure we don't hit the server too hard.
     """
     BASE_URL = "https://www.cse.lk"
     API_URL = "https://www.cse.lk/api"
     
+    # We need to look like a real browser to get the data
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "application/json, text/javascript, */*; q=0.01",
@@ -30,46 +31,47 @@ class CSEFetcher:
         self._initialize_session()
 
     def _initialize_session(self):
-        """Visit the homepage to get valid cookies (JSESSIONID, etc.)."""
+        """Go to the homepage first to grab the necessary cookies."""
         try:
-            logger.info("Initializing session...")
+            logger.info("Starting up session...")
             self.session.get(self.BASE_URL, timeout=10)
-            logger.info("Session initialized.")
+            logger.info("Session ready.")
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error initializing session: {e}")
+            logger.error(f"Couldn't start session: {e}")
 
     def _post(self, endpoint, data=None):
-        """Helper method to send POST requests with error handling."""
+        """Send a POST request to the API."""
         url = f"{self.API_URL}/{endpoint}"
         try:
             response = self.session.post(url, data=data, timeout=10)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.HTTPError as e:
-            logger.error(f"HTTP Error {e.response.status_code} fetching {endpoint}: {e.response.text}")
+            logger.error(f"HTTP Error {e.response.status_code} for {endpoint}: {e.response.text}")
             return None
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error fetching {endpoint}: {e}")
+            logger.error(f"Connection error for {endpoint}: {e}")
             return None
-        except ValueError as e: # JSONDecodeError
-            logger.error(f"JSON Decode Error for {endpoint}: {e}")
+        except ValueError as e: 
+            logger.error(f"Bad JSON from {endpoint}: {e}")
             return None
 
     def get_market_status(self):
-        """Check if market is open or closed."""
+        """Is the market open?"""
         return self._post("marketStatus")
 
     def get_market_summary(self):
-        """Get high-level market statistics."""
+        """Get the big picture stats (ASPI, S&P SL20, etc)."""
         return self._post("marketSummery")
 
     def get_active_symbols(self):
         """
-        Get a list of all active symbol strings from 'todaySharePrice'.
+        Grab the list of all stocks that are currently trading.
         """
         data = self._post("todaySharePrice")
         
         symbols = []
+        # The API is a bit inconsistent, sometimes it's a list, sometimes a dict
         if isinstance(data, list):
              for item in data:
                 symbol = item.get('symbol')
@@ -81,7 +83,7 @@ class CSEFetcher:
                 if symbol:
                     symbols.append(symbol)
         else:
-             logger.warning(f"Unexpected data format for todaySharePrice: {type(data)}")
+             logger.warning(f"Weird data format for todaySharePrice: {type(data)}")
              return []
         
         logger.info(f"Found {len(symbols)} active symbols.")
@@ -89,12 +91,13 @@ class CSEFetcher:
 
     def get_company_info(self, symbol):
         """
-        Get detailed info for a company with strict rate limiting.
+        Get the details for a specific company.
+        We pause a bit here to be nice to the server.
         """
         if not symbol:
             return None
         
-        # Rate limiting: Sleep 0.4s to be safe and respectful
+        # Take a breath properly so we don't get blocked
         time.sleep(0.4) 
         
         return self._post("companyInfoSummery", {"symbol": symbol.upper()})
