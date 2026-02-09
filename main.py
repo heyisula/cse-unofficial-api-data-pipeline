@@ -1,21 +1,46 @@
 import time
 import logging
-from datetime import datetime
+from datetime import datetime, time as dtime
 from fetcher import CSEFetcher
 from storage import CSEStorage
 
 # Set up logging to catch everything
+# We use a custom handler to ensure logs are flushed immediately
+class FlushFileHandler(logging.FileHandler):
+    def emit(self, record):
+        super().emit(record)
+        self.flush()
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("cse_pipeline.log"),
+        FlushFileHandler("cse_pipeline.log"),
         logging.StreamHandler()
     ]
 )
 logger = logging.getLogger("CSEPipeline")
 
-POLL_INTERVAL_SECONDS = 200  # Check every 5 mins
+POLL_INTERVAL_SECONDS = 200  # Check every 3.3 mins
+RETRY_DELAY_SECONDS = 60
+
+def is_market_hours():
+    """
+    Check if we are within the Colombo Stock Exchange trading window.
+    Standard hours: 09:00 - 14:30 SLT, Monday to Friday.
+    We add a bit of buffer (08:30 - 15:30) to catch pre-open and post-close movements.
+    """
+    now = datetime.now()
+    
+    # Weekend check
+    if now.weekday() >= 5: 
+        return False
+        
+    current_time = now.time()
+    start_time = dtime(8, 30)
+    end_time = dtime(15, 30)
+    
+    return start_time <= current_time <= end_time
 
 def run_pipeline():
     logger.info("Firing up the CSE Market Data Pipeline...")
@@ -24,6 +49,12 @@ def run_pipeline():
 
     while True:
         try:
+            if not is_market_hours():
+                logger.info("Market is currently offline. Resting until the next window...")
+                # Sleep for 15 minutes if market is closed to save resources
+                time.sleep(900)
+                continue
+
             start_time = time.time()
             logger.info("--------------------------------------------------")
             logger.info("Starting a new poll cycle...")
@@ -38,6 +69,12 @@ def run_pipeline():
             if not market_summary:
                 logger.warning("Couldn't get market summary. This is expected if the market is just opening.")
             
+            # Fetch additional market data (once per cycle)
+            logger.info("Fetching sector indices, movers, and detailed trades...")
+            all_sectors = fetcher.get_all_sectors()
+            movers = fetcher.get_top_movers()
+            detailed_trades = fetcher.get_detailed_trades()
+
             # 3. Who's trading?
             symbols = fetcher.get_active_symbols()
             if not symbols:
@@ -48,7 +85,7 @@ def run_pipeline():
                 company_data_list = []
                 for i, symbol in enumerate(symbols):
                     try:
-                        # Print a little update every 10 symbols so we know it's alive
+                        # Print a little update every 10 symbols
                         if (i + 1) % 10 == 0:
                             logger.info(f"Processed {i + 1}/{len(symbols)} symbols...")
 
@@ -56,15 +93,21 @@ def run_pipeline():
                         if info:
                             company_data_list.append(info)
                     except Exception as e:
-                        logger.error(f"Oops, failed to fetch info for {symbol}: {e}")
-                        # Keep going, one failure shouldn't stop the train
+                        logger.error(f"Failed to fetch info for {symbol}: {e}")
                 
                 # 4. Save what we got
                 if company_data_list:
-                    storage.save_snapshot(market_summary, company_data_list)
+                    storage.save_snapshot(
+                        market_summary, 
+                        company_data_list, 
+                        movers=movers, 
+                        all_sectors=all_sectors, 
+                        detailed_trades=detailed_trades
+                    )
                     logger.info("Saved data to disk.")
                 else:
                     logger.warning("No data to save this time.")
+
 
             # 5. Wait for the next round
             elapsed = time.time() - start_time
@@ -78,8 +121,7 @@ def run_pipeline():
             break
         except Exception as e:
             logger.error(f"Unexpected error in pipeline loop: {e}", exc_info=True)
-            # Sleep a bit before retrying to avoid rapid error loops
-            time.sleep(60)
+            time.sleep(RETRY_DELAY_SECONDS)
 
 if __name__ == "__main__":
     run_pipeline()

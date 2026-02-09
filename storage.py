@@ -23,12 +23,18 @@ class CSEStorage:
         "last_price",
         "change",
         "change_percentage",
-        "trade_volume",
+        "share_volume",
+        "trade_count",
+        "stock_turnover",
         "market_cap",
+        "is_gainer",
+        "is_loser",
+        "is_active",
         "aspi_value",
         "snp_value",
         "market_turnover"
     ]
+
 
     def __init__(self, output_dir="data"):
         self.output_dir = output_dir
@@ -52,7 +58,7 @@ class CSEStorage:
             except IOError as e:
                 logger.error(f"Trouble creating CSV file: {e}")
 
-    def save_snapshot(self, market_summary, company_data_list):
+    def save_snapshot(self, market_summary, company_data_list, movers=None, all_sectors=None, detailed_trades=None):
         """
         Saves the current batch of data.
         1. Appends to the big CSV history.
@@ -61,9 +67,27 @@ class CSEStorage:
         Args:
             market_summary: The overall market stats (ASPI, etc).
             company_data_list: The list of raw company data we fetched.
+            movers: Dict containing gainers, losers, and most active lists.
+            all_sectors: List of sector index data.
+            detailed_trades: All recent trades from the market.
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
+        # Prepare mover sets for quick lookup
+        gainer_symbols = {item.get('symbol') for item in movers.get('gainers', [])} if movers and movers.get('gainers') else set()
+        loser_symbols = {item.get('symbol') for item in movers.get('losers', [])} if movers and movers.get('losers') else set()
+        active_symbols = {item.get('symbol') for item in movers.get('active', [])} if movers and movers.get('active') else set()
+
+        # Group detailed trades by symbol for easy attachment
+        trades_by_symbol = {}
+        if detailed_trades and isinstance(detailed_trades.get('reqDetailTrades'), list):
+            for trade in detailed_trades['reqDetailTrades']:
+                sym = trade.get('symbol')
+                if sym:
+                    if sym not in trades_by_symbol:
+                        trades_by_symbol[sym] = []
+                    trades_by_symbol[sym].append(trade)
+
         # Try to pull out the market numbers. We handle all formats (live, fallback, augmented).
         if not market_summary:
             aspi_value = snp_value = market_turnover = None
@@ -113,8 +137,14 @@ class CSEStorage:
              last_price = info.get('lastTradedPrice')
              change = info.get('change')
              change_percentage = info.get('changePercentage')
-             trade_volume = info.get('tdyTradeVolume') 
+             share_volume = info.get('tdyShareVolume')
+             trade_count = info.get('tdyTradeVolume')
+             stock_turnover = info.get('tdyTurnover')
              market_cap_val = info.get('marketCap')
+
+             is_gainer = 1 if symbol in gainer_symbols else 0
+             is_loser = 1 if symbol in loser_symbols else 0
+             is_active = 1 if symbol in active_symbols else 0
 
              row = [
                  timestamp,
@@ -123,8 +153,13 @@ class CSEStorage:
                  last_price,
                  change,
                  change_percentage,
-                 trade_volume,
+                 share_volume,
+                 trade_count,
+                 stock_turnover,
                  market_cap_val,
+                 is_gainer,
+                 is_loser,
+                 is_active,
                  aspi_value,
                  snp_value,
                  market_turnover
@@ -135,9 +170,16 @@ class CSEStorage:
              clean_data = {
                  "timestamp": timestamp,
                  "symbol": symbol,
-                 "data": info
+                 "data": info,
+                 "flags": {
+                     "is_gainer": bool(is_gainer),
+                     "is_loser": bool(is_loser),
+                     "is_active": bool(is_active)
+                 },
+                 "recent_trades": trades_by_symbol.get(symbol, [])
              }
              clean_data_list.append(clean_data)
+
 
         # Write the rows to CSV
         if csv_rows:
@@ -156,11 +198,14 @@ class CSEStorage:
             snapshot = {
                 "timestamp": timestamp,
                 "market_summary": market_summary,
+                "movers": movers,
+                "sectors": all_sectors,
                 "companies": clean_data_list
             }
             with open(self.json_path, 'w', encoding='utf-8') as f:
                 json.dump(snapshot, f, indent=4)
             logger.info(f"Updated snapshot at {self.json_path}")
+
         except IOError as e:
             logger.error(f"Failed to save JSON: {e}")
 

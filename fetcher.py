@@ -118,13 +118,16 @@ class CSEFetcher:
             logger.warning("No symbols found in tradeSummary or backup.")
             return []
 
+        symbols = set()
         for item in items:
             symbol = item.get('symbol')
             if symbol:
-                symbols.append(symbol)
+                symbols.add(symbol)
         
-        logger.info(f"Retrieved {len(symbols)} symbols from market.")
-        return symbols
+        symbols_list = sorted(list(symbols))
+        logger.info(f"Retrieved {len(symbols_list)} unique symbols from market.")
+        return symbols_list
+
 
     def get_company_info(self, symbol):
         """
@@ -138,6 +141,30 @@ class CSEFetcher:
         time.sleep(0.4) 
         
         return self._post("companyInfoSummery", {"symbol": symbol.upper()})
+
+    def get_all_sectors(self):
+        """Get index data for all industry sectors."""
+        return self._post("allSectors")
+
+    def get_detailed_trades(self, symbol=None):
+        """
+        Get recent detailed trade records.
+        If symbol is provided, it's filtered (though we usually fetch the whole market list).
+        """
+        data = {"symbol": symbol.upper()} if symbol else {}
+        return self._post("detailedTrades", data)
+
+    def get_top_movers(self):
+        """
+        Fetch all market movers in one go to be efficient.
+        Returns a dict with gainers, losers, and most active.
+        """
+        return {
+            "gainers": self._post("topGainers"),
+            "losers": self._post("topLooses"),
+            "active": self._post("mostActiveTrades")
+        }
+
 
 if __name__ == "__main__":
     # verification
