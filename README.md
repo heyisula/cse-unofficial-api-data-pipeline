@@ -9,29 +9,45 @@
 
 ## Overview 📋
 
-The Colombo Stock Exchange provides real-time and historical stock data via several public endpoints used by their web portal. This repository serves two purposes:
+The Colombo Stock Exchange provides market data via several public endpoints used by their web portal. This repository serves two purposes:
 1.  **API Documentation**: Documents known endpoints, parameters, and response formats.
 2.  **Data Pipeline**: A robust Python application to poll, clean, and store market data for analysis or ML applications.
+
+**Important**: Due to the absence of an official streaming API and the presence of session-protected endpoints, near-real-time market data ingestion was implemented using periodic polling of publicly accessible CSE endpoints.
 
 ---
 
 ## 🚀 Data Pipeline Features
 
-We have built a fully automated pipeline to build your own historical dataset.
+We have built a fully automated, production-ready pipeline to build your own historical dataset.
 
-*   **Smart Polling**: Fetches data every minute (configurable) using standard HTTP requests.
-*   **Session Management**: Mimics a real browser session to reliably access protected endpoints.
-*   **Rate Limiting**: Respectful 0.4s delays between requests to prevent server overload.
-*   **Dual Storage**:
-    *   **CSV**: Appends to `data/cse_market_data.csv` for historical analysis.
-    *   **JSON**: Updates `data/cse_market_snapshot.json` for real-time dashboards.
+*   **Near-Real-Time Polling**: Fetches data every 60 seconds (1 minute) during market hours using standard HTTP requests
+*   **Time-Series Storage**: Each poll creates a new timestamped file (append-only, no overwrites)
+*   **ISO 8601 Timestamps**: All records include timezone-aware timestamps for Sri Lanka (UTC+5:30)
+*   **Session Management**: Mimics a real browser session to reliably access protected endpoints
+*   **Rate Limiting**: Respectful 0.4s delays between requests to prevent server overload
+*   **Market Hours Aware**: Automatically sleeps when market is closed (weekends and after hours)
+*   **Symbol Reference Table**: Daily-refreshed mapping of symbols to company names and sectors
+*   **ML-Ready Dataset**: Structured for time-series analysis, feature engineering, and backtesting
+*   **Dual Storage** (optional):
+    *   **Time-Series**: Endpoint-specific directories with `YYYY-MM-DD_HH-MM.json` files
+    *   **Legacy CSV**: Optional append-only CSV for backward compatibility
 
 ### 📁 Project Structure
 
-*   **`main.py`**: The entry point. Orchestrates the fetching and storage loop.
+*   **`main.py`**: The entry point. Orchestrates the near-real-time polling loop.
 *   **`fetcher.py`**: Logic for session management, API calls, and rate limiting.
-*   **`storage.py`**: Handles writing data to CSV (history) and JSON (snapshot).
+*   **`storage.py`**: Handles time-series storage and optional legacy CSV/JSON formats.
+*   **`config.py`**: Centralized configuration (polling interval, market hours, endpoints).
 *   **`data/`**: Directory where your datasets are stored (ignored by Git).
+    *   **`todaySharePrice/`**: Price snapshots by minute
+    *   **`tradeSummary/`**: Trade volume and counts
+    *   **`marketSummery/`**: Market-level metrics
+    *   **`aspiData/`**: ASPI index history
+    *   **`snpData/`**: S&P SL20 index history
+    *   **`topGainers/`**: Top gaining stocks
+    *   **`topLooses/`**: Top losing stocks
+    *   **`reference/`**: Symbol metadata (company names, sectors)
 *   **`apiweb/`**: Assets for the documentation web view.
 
 ### 🛠️ How to Run the Pipeline
@@ -41,20 +57,42 @@ We have built a fully automated pipeline to build your own historical dataset.
     pip install -r requirements.txt
     ```
 
-2.  **Start the Collector**:
+2.  **Configure Settings** (optional):
+    Edit `config.py` to adjust polling interval, market hours, or enable legacy CSV.
+
+3.  **Start the Collector**:
     ```bash
     python main.py
     ```
-    The script will log its progress to the console and `cse_pipeline.log`.
+    The script will:
+    - Log progress to console and `cse_pipeline.log`
+    - Poll every 60 seconds during market hours (09:00 - 14:35 SLT)
+    - Create timestamped files for each endpoint
+    - Sleep when market is closed
 
-3.  **Access Data**:
-    Data is saved automatically in the `data/` directory.
+4.  **Access Data**:
+    Data is saved in `data/` directory with structure:
+    ```
+    data/
+    ├── todaySharePrice/
+    │   ├── 2026-02-09_10-00.json
+    │   ├── 2026-02-09_10-01.json
+    │   └── ...
+    ├── marketSummery/
+    ├── aspiData/
+    └── reference/
+        └── symbol_metadata.json
+    ```
 
 ---
 
 ## 🔗 API Endpoints
 
 Base URL: `https://www.cse.lk/api/`
+
+### ✅ Approved Endpoints (Production-Safe)
+
+These endpoints are stable, publicly accessible, and do not require session-specific parameters.
 
 | Endpoint | Description | Method | Key Params |
 | :--- | :--- | :--- | :--- |
@@ -65,10 +103,18 @@ Base URL: `https://www.cse.lk/api/`
 | `tradeSummary` | Summary of trades for all securities | POST | - |
 | `topGainers` | List of top gaining stocks | POST | - |
 | `topLooses` | List of top losing stocks | POST | - |
-| `mostActiveTrades` | Most active trades by volume | POST | - |
-| `detailedTrades` | Trade-by-trade data (Heavy load) | POST | - |
 | `aspiData` | All Share Price Index history | POST | - |
 | `snpData` | S&P SL20 Index history | POST | - |
+| `allSectors` | Sector index data | POST | - |
+
+### ❌ Blacklisted Endpoints (DO NOT USE)
+
+These endpoints are **unstable** and **not suitable for automation**:
+
+- `chartData` - Requires hidden `chartId` and internal security IDs
+- `companyChartDataByStock` - Requires unstable `stockId` (not symbol)
+- `detailedTrades` - Session-guarded, rate-limited, returns empty data
+- `mostActiveTrades` - Part of protected endpoint group
 
 > **Note**: Most endpoints require a valid session cookie (JSESSIONID) or specific headers (`Origin`, `Referer`, `X-Requested-With`) to work. See `fetcher.py` for a working implementation.
 

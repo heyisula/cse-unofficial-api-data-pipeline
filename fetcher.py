@@ -146,23 +146,17 @@ class CSEFetcher:
         """Get index data for all industry sectors."""
         return self._post("allSectors")
 
-    def get_detailed_trades(self, symbol=None):
-        """
-        Get recent detailed trade records.
-        If symbol is provided, it's filtered (though we usually fetch the whole market list).
-        """
-        data = {"symbol": symbol.upper()} if symbol else {}
-        return self._post("detailedTrades", data)
-
     def get_top_movers(self):
         """
-        Fetch all market movers in one go to be efficient.
-        Returns a dict with gainers, losers, and most active.
+        Fetch market movers (top gainers and losers).
+        Returns a dict with gainers and losers.
+        
+        Note: 'mostActiveTrades' endpoint is blacklisted (session-protected)
+        and has been removed to ensure pipeline stability.
         """
         return {
             "gainers": self._post("topGainers"),
-            "losers": self._post("topLooses"),
-            "active": self._post("mostActiveTrades")
+            "losers": self._post("topLooses")
         }
 
 
