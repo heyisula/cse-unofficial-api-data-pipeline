@@ -23,10 +23,12 @@ We have built a fully automated, production-ready pipeline to build your own his
 
 *   **Near-Real-Time Polling**: Fetches data every 60 seconds (1 minute) during market hours using standard HTTP requests
 *   **Time-Series Storage**: Each poll creates a new timestamped file (append-only, no overwrites)
-*   **ISO 8601 Timestamps**: All records include timezone-aware timestamps for Sri Lanka (UTC+5:30)
 *   **Session Management**: Mimics a real browser session to reliably access protected endpoints
 *   **Rate Limiting**: Respectful 0.4s delays between requests to prevent server overload
 *   **Market Hours Aware**: Automatically sleeps when market is closed (weekends and after hours)
+*   **Data Quality & Normalization**:
+    *   **Security Classification**: Automatically identifies `NORMAL_STOCK`, `UNIT_TRUST`, `RIGHTS_ISSUE`, and `OFF_BOARD` types.
+    *   **Zero-Fill Fallback**: Guarantees numeric consistency by filling missing metrics (Trade Count, Turnover, Market Cap, Indices) with `0.0`.
 *   **Symbol Reference Table**: Daily-refreshed mapping of symbols to company names and sectors
 *   **ML-Ready Dataset**: Structured for time-series analysis, feature engineering, and backtesting
 *   **Dual Storage** (optional):
@@ -80,9 +82,33 @@ We have built a fully automated, production-ready pipeline to build your own his
     │   └── ...
     ├── marketSummery/
     ├── aspiData/
-    └── reference/
-        └── symbol_metadata.json
+    ├── reference/
+    │   └── symbol_metadata.json
+    └── cse_market_data.csv (Legacy CSV, if enabled)
     ```
+
+### 📊 Legacy CSV Schema
+
+If `ENABLE_LEGACY_CSV` is active, the `data/cse_market_data.csv` file contains the following columns:
+
+| Column | Description | Type |
+| :--- | :--- | :--- |
+| `timestamp` | ISO 8601 creation time | String |
+| `symbol` | CSE Symbol (e.g., JKH.N0000) | String |
+| `company_name` | Full name of the company | String |
+| `security_type` | Classification (STOCK/UNIT/RIGHTS/OFF) | String |
+| `last_price` | Last traded price | Float |
+| `change` | Price change from previous close | Float |
+| `change_percentage` | Percentage change | Float |
+| `share_volume` | Total shares traded today | Float |
+| `trade_count` | Number of trades (Zero-filled) | Integer |
+| `stock_turnover` | Value of shares traded (Zero-filled) | Float |
+| `market_cap` | Current market capitalization | Float |
+| `is_gainer` | 1 if in Top Gainers, else 0 | Integer |
+| `is_loser` | 1 if in Top Losers, else 0 | Integer |
+| `aspi_value` | ASPI Index value (Zero-filled) | Float |
+| `snp_value` | S&P SL20 Index value (Zero-filled) | Float |
+| `market_turnover` | Total market-wide turnover | Float |
 
 ---
 
