@@ -64,26 +64,39 @@ class CSEStorage:
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # Try to pull out the market numbers. We handle both live and fallback formats.
+        # Try to pull out the market numbers. We handle all formats (live, fallback, augmented).
         if not market_summary:
             aspi_value = snp_value = market_turnover = None
-        elif 'reqMarketSummery' in market_summary:
-            # Standard live format
-            ms = market_summary.get('reqMarketSummery', {})
-            aspi_value = ms.get('aspi', {}).get('value')
-            snp_value = ms.get('snp', {}).get('value')
-            market_turnover = ms.get('turnover')
         else:
-            # Fallback format (dailyMarketSummery) or flat response
-            # Indices can be direct (asi/spp) or nested (aspi/snp from our aggregation)
-            aspi_value = market_summary.get('asi') or market_summary.get('aspi', {}).get('value')
-            snp_value = market_summary.get('spp') or market_summary.get('spt') or market_summary.get('snp', {}).get('value')
+            # We look everywhere: root level, inside reqMarketSummery, and under all known keys.
+            ms = market_summary.get('reqMarketSummery', {}) if isinstance(market_summary.get('reqMarketSummery'), dict) else {}
             
-            # Turnover can be under various keys depending on the endpoint
+            # 1. ASPI
+            aspi_value = (
+                market_summary.get('asi') or 
+                market_summary.get('aspi', {}).get('value') or 
+                ms.get('aspi', {}).get('value') or
+                ms.get('asi')
+            )
+            
+            # 2. SNP SL20
+            snp_value = (
+                market_summary.get('spp') or 
+                market_summary.get('spt') or 
+                market_summary.get('snp', {}).get('value') or
+                ms.get('snp', {}).get('value') or
+                ms.get('spp') or 
+                ms.get('spt')
+            )
+            
+            # 3. Turnover
             market_turnover = (
                 market_summary.get('marketTurnover') or 
                 market_summary.get('turnover') or 
-                market_summary.get('tradeVolume')  # Used by flat marketSummery
+                market_summary.get('tradeVolume') or
+                ms.get('marketTurnover') or 
+                ms.get('turnover') or
+                ms.get('tradeVolume')
             )
         
         csv_rows = []
