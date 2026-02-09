@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("CSEPipeline")
 
-POLL_INTERVAL_SECONDS = 60  # Check every minute
+POLL_INTERVAL_SECONDS = 200  # Check every 5 mins
 
 def run_pipeline():
     logger.info("Firing up the CSE Market Data Pipeline...")
@@ -30,20 +30,18 @@ def run_pipeline():
 
             # 1. Is the market open?
             status_data = fetcher.get_market_status()
-            status_str = status_data.get('marketStatus', 'Unknown') if status_data else 'Unknown'
+            status_str = status_data.get('status', 'Unknown') if status_data else 'Unknown'
             logger.info(f"Market Status: {status_str}")
 
-            # Even if it's closed, we'll carry on for now, just in case.
-            
             # 2. Get the big picture
             market_summary = fetcher.get_market_summary()
             if not market_summary:
-                logger.error("Couldn't get market summary. Skipping this round.")
+                logger.warning("Couldn't get market summary. This is expected if the market is just opening.")
             
             # 3. Who's trading?
             symbols = fetcher.get_active_symbols()
             if not symbols:
-                logger.warning("No active symbols found. Nothing to fetch.")
+                logger.info("No active symbols found. This is normal during pre-open/closed phases.")
             else:
                 logger.info(f"Fetching details for {len(symbols)} symbols...")
                 

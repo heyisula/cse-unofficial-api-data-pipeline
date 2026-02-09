@@ -64,10 +64,27 @@ class CSEStorage:
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # Try to pull out the market numbers. If they aren't there, we just use None.
-        aspi_value = market_summary.get('reqMarketSummery', {}).get('aspi', {}).get('value') if market_summary else None
-        snp_value = market_summary.get('reqMarketSummery', {}).get('snp', {}).get('value') if market_summary else None
-        market_turnover = market_summary.get('reqMarketSummery', {}).get('turnover') if market_summary else None
+        # Try to pull out the market numbers. We handle both live and fallback formats.
+        if not market_summary:
+            aspi_value = snp_value = market_turnover = None
+        elif 'reqMarketSummery' in market_summary:
+            # Standard live format
+            ms = market_summary.get('reqMarketSummery', {})
+            aspi_value = ms.get('aspi', {}).get('value')
+            snp_value = ms.get('snp', {}).get('value')
+            market_turnover = ms.get('turnover')
+        else:
+            # Fallback format (dailyMarketSummery) or flat response
+            # Indices can be direct (asi/spp) or nested (aspi/snp from our aggregation)
+            aspi_value = market_summary.get('asi') or market_summary.get('aspi', {}).get('value')
+            snp_value = market_summary.get('spp') or market_summary.get('spt') or market_summary.get('snp', {}).get('value')
+            
+            # Turnover can be under various keys depending on the endpoint
+            market_turnover = (
+                market_summary.get('marketTurnover') or 
+                market_summary.get('turnover') or 
+                market_summary.get('tradeVolume')  # Used by flat marketSummery
+            )
         
         csv_rows = []
         clean_data_list = []

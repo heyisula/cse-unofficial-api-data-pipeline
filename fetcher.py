@@ -45,15 +45,22 @@ class CSEFetcher:
         try:
             response = self.session.post(url, data=data, timeout=10)
             response.raise_for_status()
+            
+            # Handle 204 No Content or empty bodies gracefully
+            if response.status_code == 204 or not response.text.strip():
+                return None
+                
             return response.json()
         except requests.exceptions.HTTPError as e:
             logger.error(f"HTTP Error {e.response.status_code} for {endpoint}: {e.response.text}")
             return None
+        except (requests.exceptions.JSONDecodeError, ValueError) as e:
+            # During certain market phases (like pre-open), some endpoints might return 
+            # non-JSON or weirdly formatted empty responses.
+            logger.debug(f"Could not parse JSON from {endpoint}. Market might be in transition.")
+            return None
         except requests.exceptions.RequestException as e:
             logger.error(f"Connection error for {endpoint}: {e}")
-            return None
-        except ValueError as e: 
-            logger.error(f"Bad JSON from {endpoint}: {e}")
             return None
 
     def get_market_status(self):
@@ -62,7 +69,29 @@ class CSEFetcher:
 
     def get_market_summary(self):
         """Get the big picture stats (ASPI, S&P SL20, etc)."""
-        return self._post("marketSummery")
+        data = self._post("marketSummery")
+        
+        # If we got a basic summary, try to augment it with current index values
+        if isinstance(data, dict):
+            # Fetch ASPI and SNP separately since marketSummery often lacks them
+            aspi_data = self._post("aspiData")
+            if aspi_data:
+                data['aspi'] = aspi_data
+            
+            snp_data = self._post("snpData")
+            if snp_data:
+                data['snp'] = snp_data
+            
+            return data
+            
+        # Fallback to dailyMarketSummery if marketSummery is empty (common in pre-open)
+        logger.info("Market summary empty, trying dailyMarketSummery fallback...")
+        daily_data = self._post("dailyMarketSummery")
+        if daily_data and isinstance(daily_data, list) and len(daily_data) > 0:
+            # Return the most recent record
+            return daily_data[0][0] if isinstance(daily_data[0], list) else daily_data[0]
+            
+        return None
 
     def get_active_symbols(self):
         """
