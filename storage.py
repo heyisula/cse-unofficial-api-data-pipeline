@@ -11,16 +11,15 @@ logger = logging.getLogger(__name__)
 
 class CSEStorage:
     """
-    Handles saving market data in a time-series, append-only structure.
+    Handles saving market data in a time series, append only structure.
     
     Storage Architecture:
     - Timestamped files per endpoint (no overwrites)
-    - ISO 8601 timestamps with timezone on every record
     - Optional legacy CSV for backward compatibility
     - Symbol reference table for normalization
     """
     
-    # Legacy CSV settings (optional)
+    # Legacy CSV settings
     CSV_FILENAME = "cse_market_data.csv"
     JSON_FILENAME = "cse_market_snapshot.json"
     
@@ -82,7 +81,7 @@ class CSEStorage:
         if not os.path.exists(self.reference_dir):
             os.makedirs(self.reference_dir)
         
-        # Legacy paths (optional)
+        # Legacy paths
         self.csv_path = os.path.join(self.output_dir, self.CSV_FILENAME)
         self.json_path = os.path.join(self.output_dir, self.JSON_FILENAME)
         
@@ -102,7 +101,6 @@ class CSEStorage:
 
     def get_timestamp(self):
         """
-        Returns ISO 8601 timestamp in Sri Lanka timezone.
         Format: 2026-02-09T18:45:00+05:30
         """
         tz = timezone(SL_TIMEZONE_OFFSET)
@@ -132,7 +130,6 @@ class CSEStorage:
         Args:
             endpoint_name: Name of the endpoint (e.g., 'todaySharePrice')
             data: Raw API response
-            timestamp: Optional ISO 8601 timestamp (generated if None)
         
         Returns:
             Path to the saved file
@@ -148,7 +145,7 @@ class CSEStorage:
         endpoint_dir = self.create_endpoint_directory(endpoint_name)
         
         # Generate filename: YYYY-MM-DD_HH-MM.json
-        # Extract YYYY-MM-DD_HH-MM from ISO 8601 timestamp
+        # Extract YYYY-MM-DD_HH-MM from ISO
         # 2026-02-09T18:45:00+05:30 -> 2026-02-09_18-45
         dt_str = timestamp[:16]  # 2026-02-09T18:45
         filename = dt_str.replace('T', '_').replace(':', '-') + '.json'
@@ -172,8 +169,7 @@ class CSEStorage:
 
     def build_symbol_reference(self, price_data, sectors_data):
         """
-        Create a static reference table mapping symbols to company names and sectors.
-        This should be called once per day or on startup.
+        Creating a static reference table mapping symbols to company names and sectors (once per day or on startup)
         
         Args:
             price_data: Response from todaySharePrice
@@ -220,9 +216,7 @@ class CSEStorage:
                 sector_name = sector.get('index') or sector.get('name')
                 sector_index_value = sector.get('value')
                 
-                # Note: Without additional symbol-to-sector mapping in the API,
-                # we rely on the sector field in price_data.
-                # This section can be enhanced if sector membership lists become available.
+                # Note: Without additional symbol-to-sector mapping in the API,rely on the sector field in price_data.
         
         # Save to reference directory
         ref_path = os.path.join(self.reference_dir, "symbol_metadata.json")
@@ -243,7 +237,6 @@ class CSEStorage:
 
     def save_snapshot(self, market_summary, company_data_list, movers=None, all_sectors=None):
         """
-        Main data persistence method.
         Saves data in time-series format AND optionally to legacy CSV.
         
         Args:
@@ -271,7 +264,7 @@ class CSEStorage:
         if all_sectors:
             self.save_endpoint_data('allSectors', all_sectors, timestamp)
         
-        # Legacy CSV and JSON snapshot (optional)
+        # Legacy CSV and JSON snapshot
         if ENABLE_LEGACY_CSV:
             self._save_legacy_formats(timestamp, market_summary, company_data_list, movers, all_sectors)
 
@@ -290,13 +283,13 @@ class CSEStorage:
                 loser_symbols = {item.get('symbol') for item in movers['losers'] if item.get('symbol')}
         
         # Extract market-level values
-        # Initialize with 0.0 (Option 1: Fill missing values with 0)
+        # Initialize with 0.0 (Filling missing values with 0)
         aspi_value = 0.0
         snp_value = 0.0
         market_turnover = 0.0
         
         if market_summary:
-            # The CSE API returns values directly in the top-level dict or sometimes in reqMarketSummery
+            # The CSE API returns values directly in the top level dict or sometimes in reqMarketSummery
             ms = market_summary.get('reqMarketSummery', {}) if isinstance(market_summary.get('reqMarketSummery'), dict) else {}
             
             # 1. ASPI Value
@@ -346,8 +339,7 @@ class CSEStorage:
             change_percentage = info.get('changePercentage')
             share_volume = info.get('tdyShareVolume')
             
-            # Option 1: Fill missing values with 0 for better data handling
-            # Unit trusts and rights issues don't have these fields in API response
+            #Filling missing values with 0 for better data handling
             trade_count = info.get('tdyTradeVolume') or 0
             stock_turnover = info.get('tdyTurnover') or 0.0
             market_cap_val = info.get('marketCap') or 0.0

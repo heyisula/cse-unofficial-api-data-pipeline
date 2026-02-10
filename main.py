@@ -14,8 +14,7 @@ from config import (
     SYMBOL_REFRESH_MINUTE
 )
 
-# Set up logging to catch everything
-# We use a custom handler to ensure logs are flushed immediately
+# Setting up logging to catch everything (custom handler to ensure logs are flushed immediately)
 class FlushFileHandler(logging.FileHandler):
     def emit(self, record):
         super().emit(record)
@@ -33,9 +32,8 @@ logger = logging.getLogger("CSEPipeline")
 
 def is_market_hours():
     """
-    Check if we are within the Colombo Stock Exchange trading window.
+    Checking if we are within the Colombo Stock Exchange trading window.
     Standard hours: 09:00 - 14:30 SLT, Monday to Friday.
-    We add a small buffer to catch post-close movements.
     """
     now = datetime.now()
     
@@ -51,15 +49,13 @@ def is_market_hours():
 
 def should_refresh_symbols():
     """
-    Check if it's time to refresh the symbol reference table.
-    This should happen once per day shortly after market open.
+    Checking if it's time to refresh the symbol reference table  (happens once per day at a specific time).
     """
     now = datetime.now()
     current_time = now.time()
     refresh_time = dtime(SYMBOL_REFRESH_HOUR, SYMBOL_REFRESH_MINUTE)
     
-    # Check if we're within a 5-minute window of the refresh time
-    # This ensures we catch it during the polling cycle
+    # Checking if we're within a 5 minute window of the refresh time
     time_diff_minutes = abs((current_time.hour * 60 + current_time.minute) - 
                             (refresh_time.hour * 60 + refresh_time.minute))
     
@@ -103,7 +99,7 @@ def run_pipeline():
             logger.info(f"POLL CYCLE START: {timestamp}")
             logger.info("=" * 60)
 
-            # Track success/failure counts
+            # Keeping track of success/failure counts
             endpoints_fetched = []
             endpoints_failed = []
 
@@ -213,7 +209,6 @@ def run_pipeline():
                     logger.warning("  ✗ Cannot refresh symbols: missing data")
 
             # 10. Individual Company Data (for legacy CSV compatibility)
-            # This is optional and can be disabled if only using time-series storage
             symbols = fetcher.get_active_symbols()
             company_data_list = []
             

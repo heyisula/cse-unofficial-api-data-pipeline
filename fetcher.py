@@ -2,19 +2,19 @@ import requests
 import time
 import logging
 
-# Set up logging so we can see what's happening
+# Set up logging to see whats happning
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class CSEFetcher:
     """
     Client for collecting data from the Colombo Stock Exchange (CSE).
-    It manages the connection, cookies, and makes sure we don't hit the server too hard.
+    Managing the connection, cookies, and not throtteling server requests.
     """
     BASE_URL = "https://www.cse.lk"
     API_URL = "https://www.cse.lk/api"
     
-    # We need to look like a real browser to get the data
+    # Acting as a real browser to avoid basic bot block
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "application/json, text/javascript, */*; q=0.01",
@@ -46,7 +46,7 @@ class CSEFetcher:
             response = self.session.post(url, data=data, timeout=10)
             response.raise_for_status()
             
-            # Handle 204 No Content or empty bodies gracefully
+            # Handling 204 No Content or empty bodies
             if response.status_code == 204 or not response.text.strip():
                 return None
                 
@@ -55,8 +55,7 @@ class CSEFetcher:
             logger.error(f"HTTP Error {e.response.status_code} for {endpoint}: {e.response.text}")
             return None
         except (requests.exceptions.JSONDecodeError, ValueError) as e:
-            # During certain market phases (like pre-open), some endpoints might return 
-            # non-JSON or weirdly formatted empty responses.
+            # During certain market phases (like pre-open), some endpoints might return non-JSON or weirdly formatted empty responses.
             logger.debug(f"Could not parse JSON from {endpoint}. Market might be in transition.")
             return None
         except requests.exceptions.RequestException as e:
@@ -95,9 +94,7 @@ class CSEFetcher:
 
     def get_active_symbols(self):
         """
-        Grab the list of all symbols that are or were recently active.
-        We've switched this to 'tradeSummary' because 'todaySharePrice' 
-        often limits results to just 10 items.
+        Grabing the list of all symbols that are or were recently active.
         """
         data = self._post("tradeSummary")
         
@@ -131,28 +128,25 @@ class CSEFetcher:
 
     def get_company_info(self, symbol):
         """
-        Get the details for a specific company.
-        We pause a bit here to be nice to the server.
+        Getting the details for a specific company.
         """
         if not symbol:
             return None
         
-        # Take a breath properly so we don't get blocked
+        # Take a delay properly to don't get blocked
         time.sleep(0.4) 
         
         return self._post("companyInfoSummery", {"symbol": symbol.upper()})
 
     def get_all_sectors(self):
-        """Get index data for all industry sectors."""
+        """Receiving index data for all industry sectors."""
         return self._post("allSectors")
 
     def get_top_movers(self):
         """
-        Fetch market movers (top gainers and losers).
-        Returns a dict with gainers and losers.
+        Fetching market movers (top gainers and losers).
         
-        Note: 'mostActiveTrades' endpoint is blacklisted (session-protected)
-        and has been removed to ensure pipeline stability.
+        Note: 'mostActiveTrades' endpoint is blacklisted (session-protected) and has been removed to ensure pipeline stability.
         """
         return {
             "gainers": self._post("topGainers"),
