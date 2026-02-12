@@ -31,7 +31,7 @@ class CSEFetcher:
         self._initialize_session()
 
     def _initialize_session(self):
-        """Go to the homepage first to grab the necessary cookies."""
+        """Visiting to the homepage first to grab the necessary cookies."""
         try:
             logger.info("Starting up session...")
             self.session.get(self.BASE_URL, timeout=10)
