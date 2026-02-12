@@ -216,7 +216,7 @@ class CSEStorage:
                 sector_name = sector.get('index') or sector.get('name')
                 sector_index_value = sector.get('value')
                 
-                # Note: Without additional symbol-to-sector mapping in the API,rely on the sector field in price_data.
+                #Without additional symbol-to-sector mapping in the API,rely on the sector field in price_data.
         
         # Save to reference directory
         ref_path = os.path.join(self.reference_dir, "symbol_metadata.json")
